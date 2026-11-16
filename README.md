@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# nexjs-practice-nov26
 
-## Getting Started
+Next.js App Router POC using the MongoDB Node.js driver.
 
-First, run the development server:
+## Setup
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+1. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+2. Copy `.env.example` to `.env.local` and set `MONGODB_URI`. Keep this file
+   private; it is ignored by Git.
+
+3. In MongoDB Atlas, allow your development IP address and create a database
+   user with the required permissions.
+
+4. Start the app:
+
+   ```bash
+   npm run dev
+   ```
+
+The top banner shows whether the app can reach MongoDB.
+
+## Simple folder guide
+
+```text
+src/
+├── app/                  # URLs and API endpoints (Next.js routes)
+│   ├── api/              # HTTP APIs: route.ts
+│   ├── users/page.tsx
+│   ├── products/page.tsx
+│   ├── todos/page.tsx
+│   ├── page.tsx          # POC overview
+│   └── layout.tsx        # Shared status banner and navigation
+├── features/             # Code grouped by feature
+│   ├── users/
+│   │   ├── model.ts      # User document and public response types
+│   │   ├── data.ts       # User collection reads/writes (DAL)
+│   │   ├── actions.ts    # Registration Server Action
+│   │   └── components/   # Registration form and user list
+│   ├── products/
+│   │   ├── model.ts      # Product document and display types
+│   │   ├── data.ts       # Product collection reads/writes (DAL)
+│   │   ├── actions.ts    # Add-product Server Action
+│   │   └── components/   # Product form
+│   └── todos/
+│       ├── model.ts      # Todo document and display types
+│       ├── data.ts       # Todo collection reads/writes (DAL)
+│       ├── actions.ts    # Add, complete, and delete Server Actions
+│       └── components/   # Todo form and list
+├── components/shared/    # UI reused across multiple features/pages
+└── lib/                  # Shared infrastructure, not feature data
+    ├── mongodb.ts        # Reuses the MongoDB connection
+    └── password.ts       # Hashes registration PINs
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Each feature folder (`users`, `products`, `todos`) follows the same pattern:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. `model.ts` describes the data shape and TypeScript types.
+2. `data.ts` reads/writes that feature's MongoDB collection.
+3. `actions.ts` validates submitted form data, calls `data.ts`, and refreshes
+   the page when needed.
+4. `components/` contains the feature's forms and lists.
+5. `app/<feature>/page.tsx` maps the URL to the page and combines components.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+This project uses the native MongoDB driver, not Mongoose. Therefore `model.ts`
+contains TypeScript types, not a Mongoose schema or automatic MongoDB
+validation. Server Actions validate input before calling the data layer.
+MongoDB stores records in the `users`, `products`, and `todos` collections.
 
-## Learn More
+## Routes
 
-To learn more about Next.js, take a look at the following resources:
+- `/` — POC overview, route map, tech stack, and connection status.
+- `/users` — user registration and public user list.
+- `/products` — add and browse products.
+- `/todos` — add, complete, and delete todos.
+- `/api/users` — returns up to 100 public user records (name and registration
+  date only; never email or PIN hash).
+- `/api/health/db` — JSON MongoDB connection check.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Registration, user listing, product management, and todos are open demo
+features. Four-digit PINs are weak. Add authentication, authorization, and rate
+limiting before exposing the app publicly or using real personal data.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Product prices are stored as integer minor units with two decimal places. The
+app does not assume a currency.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Never expose `MONGODB_URI` through a `NEXT_PUBLIC_` variable. For deployment,
+set it in the hosting provider's environment-variable settings.
