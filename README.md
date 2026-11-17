@@ -24,6 +24,18 @@ Next.js App Router POC using the MongoDB Node.js driver.
 
 The top banner shows whether the app can reach MongoDB.
 
+## Cloudflare Workers deployment
+
+In Workers Builds settings, use `npm run cf:build` as the build command.
+Use `npm run cf:deploy` for production deployments and `npx wrangler preview`
+for pull request previews. A plain `next build` does not generate the
+`.open-next` Worker output.
+
+Set `MONGODB_URI` as a production Worker secret and separately in the Previews
+Base secrets for new previews. Use a separate test database for previews.
+If the build itself needs database access, also configure the secret in
+Workers Builds variables and secrets. Never commit the URI.
+
 ## Simple folder guide
 
 ```text
