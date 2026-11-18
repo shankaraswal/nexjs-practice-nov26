@@ -1,25 +1,62 @@
-import { connection } from "next/server";
-import { getMongoClient } from "@/lib/mongodb";
+"use client";
+
+import { useEffect, useState } from "react";
 
 type DatabaseStatusResult =
+  | { connected: null }
   | { connected: true; databaseName: string }
   | { connected: false };
 
-async function getDatabaseStatus(): Promise<DatabaseStatusResult> {
-  try {
-    const client = await getMongoClient();
-    const database = client.db();
-    await database.command({ ping: 1 });
-    return { connected: true, databaseName: database.databaseName };
-  } catch (error) {
-    console.error("MongoDB status check failed:", error);
-    return { connected: false };
-  }
-}
+export function DatabaseStatus() {
+  const [result, setResult] = useState<DatabaseStatusResult>({ connected: null });
 
-export async function DatabaseStatus() {
-  await connection();
-  const result = await getDatabaseStatus();
+  useEffect(() => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    let active = true;
+
+    async function checkStatus() {
+      try {
+        const response = await fetch("/api/health/db", {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        if (!response.ok) {
+          throw new Error(`MongoDB health check returned ${response.status}`);
+        }
+        const data: unknown = await response.json();
+        if (
+          typeof data !== "object" ||
+          data === null ||
+          !("database" in data) ||
+          typeof data.database !== "string"
+        ) {
+          throw new Error("Invalid MongoDB health check response");
+        }
+        if (active) {
+          setResult({ connected: true, databaseName: data.database });
+        }
+      } catch (error) {
+        if (active) {
+          console.error("MongoDB status check failed:", error);
+          setResult({ connected: false });
+        }
+      } finally {
+        clearTimeout(timeout);
+      }
+    }
+
+    void checkStatus();
+    return () => {
+      active = false;
+      clearTimeout(timeout);
+      controller.abort();
+    };
+  }, []);
+
+  if (result.connected === null) {
+    return <DatabaseStatusFallback />;
+  }
 
   return (
     <header

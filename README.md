@@ -26,15 +26,15 @@ The top banner shows whether the app can reach MongoDB.
 
 ## Cloudflare Workers deployment
 
-In Workers Builds settings, use `npm run cf:build` as the build command.
-Use `npm run cf:deploy` for production deployments and `npx wrangler preview`
-for pull request previews. A plain `next build` does not generate the
-`.open-next` Worker output.
+Run `npm run cf:build` and then `npm run cf:preview` to test locally. In the
+Cloudflare Workers Builds dashboard, use `npm run cf:build` as the build
+command, `npm run cf:deploy` as the production deploy command, and
+`npx wrangler preview` as the preview deploy command.
 
-Set `MONGODB_URI` as a production Worker secret and separately in the Previews
-Base secrets for new previews. Use a separate test database for previews.
-If the build itself needs database access, also configure the secret in
-Workers Builds variables and secrets. Never commit the URI.
+Configure `MONGODB_URI` as a Worker secret and separately for previews; use a
+test database for previews. The database status is checked in the browser so
+an unavailable database does not block page rendering. MongoDB connectivity
+still depends on Workers runtime compatibility and network access.
 
 ## Simple folder guide
 
