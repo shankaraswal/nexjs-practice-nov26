@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
-import {
-  DatabaseStatus,
-  DatabaseStatusFallback,
-} from "@/components/shared/database-status";
+import { DatabaseStatus } from "@/components/shared/database-status";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -30,9 +26,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Suspense fallback={<DatabaseStatusFallback />}>
-          <DatabaseStatus />
-        </Suspense>
+        <DatabaseStatus />
         <nav
           aria-label="Main navigation"
           className="flex min-h-14 items-center justify-between border-b border-slate-200 bg-white px-6"

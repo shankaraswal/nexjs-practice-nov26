@@ -29,7 +29,12 @@ export function getMongoClient(): Promise<MongoClient> {
 }
 
 function connect(uri: string, onError: () => void): Promise<MongoClient> {
-  return new MongoClient(uri).connect().catch((error: unknown) => {
+  const client = new MongoClient(uri, {
+    connectTimeoutMS: 5000,
+    serverSelectionTimeoutMS: 5000,
+    timeoutMS: 5000,
+  });
+  return client.connect().catch((error: unknown) => {
     onError();
     throw error;
   });
